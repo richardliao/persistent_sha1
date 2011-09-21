@@ -1,2 +1,38 @@
+Summary
+=======
 This is a persistent sha1 package, based on shamodule.c from python 2.4.6.
+
+Purpose
+=======
+The built-in hashlib.sha1 in python is a wrapper around a C library, which does 
+not support persistence.
+
+There are some pure sha1 implementations support persistence, like:
+
+    http://force.vnsecurity.net/download/rd/sha.py
+    or
+    http://code.google.com/p/slowsha/
+
+The problem is that they are too slow than hashlib.sha1 to be used in production
+environment.
+
+This package adapts from the C sha1 module from python 2.4.6, add two methods: 
+dumps and loads. So, the performance is the same as python's one, and we can 
+save and restore the status at anytime. The dumped string is small(108 bytes).
+
+Installation
+============
+To install:
+
+    python setup.py build
+    sudo python setup.py install
+
+Example
+=======
+    import persistentsha1
+    h1 = persistentsha1.sha1()
+    h1.update("test")
+    s = h1.dumps()
+    h2 = persistentsha1.loads(s)
+    assert h1.hexdigest() == h2.hexdigest()
 
