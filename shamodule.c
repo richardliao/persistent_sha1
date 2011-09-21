@@ -444,11 +444,29 @@ SHA_update(SHAobject *self, PyObject *args)
     return Py_None;
 }
 
+PyDoc_STRVAR(SHA_dumps__doc__, "Return string of dumped hashing object.");
+
+static PyObject *
+SHA_dumps(SHAobject *self, PyObject *args)
+{
+    SHAobject *newobj;
+
+    if (!PyArg_ParseTuple(args, ":dumps")) {
+        return NULL;
+    }
+    if ( (newobj = newSHAobject())==NULL)
+        return NULL;
+
+    SHAcopy(self, newobj);
+    return PyString_FromStringAndSize((const char *)newobj, sizeof(SHAobject));
+}
+
 static PyMethodDef SHA_methods[] = {
     {"copy",	  (PyCFunction)SHA_copy,      METH_VARARGS, SHA_copy__doc__},
     {"digest",	  (PyCFunction)SHA_digest,    METH_VARARGS, SHA_digest__doc__},
     {"hexdigest", (PyCFunction)SHA_hexdigest, METH_VARARGS, SHA_hexdigest__doc__},
     {"update",	  (PyCFunction)SHA_update,    METH_VARARGS, SHA_update__doc__},
+    {"dumps",	  (PyCFunction)SHA_dumps,     METH_VARARGS, SHA_dumps__doc__},
     {NULL,	  NULL}		/* sentinel */
 };
 
@@ -511,27 +529,46 @@ SHA_new(PyObject *self, PyObject *args, PyObject *kwdict)
     return (PyObject *)new;
 }
 
+PyDoc_STRVAR(SHA_loads__doc__, "Return an new hashing object loaded from string.");
+
+static PyObject *
+SHA_loads(SHAobject *self, PyObject *args)
+{
+    unsigned char *src;
+    int len;
+    SHAobject *newobj;
+
+    if (!PyArg_ParseTuple(args, "s#:load", &src, &len))
+        return NULL;
+
+    if ( (newobj = newSHAobject())==NULL)
+        return NULL;
+
+    SHAcopy((SHAobject *)src, newobj);
+
+    return (PyObject *)newobj;
+}
 
 /* List of functions exported by this module */
 
 static struct PyMethodDef SHA_functions[] = {
     {"new", (PyCFunction)SHA_new, METH_VARARGS|METH_KEYWORDS, SHA_new__doc__},
-    {"sha", (PyCFunction)SHA_new, METH_VARARGS|METH_KEYWORDS, SHA_new__doc__},
+    {"sha1", (PyCFunction)SHA_new, METH_VARARGS|METH_KEYWORDS, SHA_new__doc__},
+    {"loads", (PyCFunction)SHA_loads, METH_VARARGS|METH_KEYWORDS, SHA_loads__doc__},
     {NULL,	NULL}		 /* Sentinel */
 };
-
 
 /* Initialize this module. */
 
 #define insint(n,v) { PyModule_AddIntConstant(m,n,v); }
 
 PyMODINIT_FUNC
-initsha(void)
+initpersistentsha1(void)
 {
     PyObject *m;
 
     SHAtype.ob_type = &PyType_Type;
-    m = Py_InitModule("sha", SHA_functions);
+    m = Py_InitModule("persistentsha1", SHA_functions);
     if (m == NULL)
 	return;
 
